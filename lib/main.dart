@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:invoice_generater/screen/global/global.dart';
-import 'package:invoice_generater/screen/home.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:invoice_generater/screen/splash/splash.dart';
 

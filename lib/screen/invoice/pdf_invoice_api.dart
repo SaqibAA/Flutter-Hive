@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'file_handle_api.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -128,7 +129,7 @@ class PdfInvoiceApi {
               padding: pw.EdgeInsets.only(right: 20),
               alignment: pw.Alignment.centerRight,
               child: pw.Text(
-                "Total : ₹ ${list[0]['total']}",
+                "Total :${NumberFormat.currency(symbol:'',decimalDigits:1,locale:'Hi').format(num.parse(list[0]['total'].toString()))}",
                 style:
                     pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
               ),

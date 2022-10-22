@@ -3,10 +3,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:invoice_generater/screen/global/global.dart';
-// import 'package:invoice_generater/screen/invoice/file_handle_api.dart';
-// import 'package:invoice_generater/screen/invoice/pdf_invoice_api.dart';
 import 'package:invoice_generater/screen/invoice_details.dart';
 
+// ignore: must_be_immutable
 class CreateInvoice extends StatefulWidget {
   int key_value;
   CreateInvoice({Key? key, required this.key_value}) : super(key: key);
@@ -15,7 +14,7 @@ class CreateInvoice extends StatefulWidget {
   State<CreateInvoice> createState() => CreateInvoiceState();
 }
 
-List ItemLIist = [];
+List ItemList = [];
 String name = '';
 String address = '';
 double Total_Amount = 0.0;
@@ -24,36 +23,34 @@ class CreateInvoiceState extends State<CreateInvoice> {
   @override
   void initState() {
     super.initState();
-    ItemLIist = [];
+    ItemList = [];
     Total_Amount = 0.0;
   }
 
+  final box = Hive.box("invoice");
+
+  // Add Item
+  Future<void> AddItem(Map<String, dynamic> newItem) async {
+    await box.add(newItem);
+    print(newItem);
+    Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => InvoiceDetails(item_key: widget.key_value)));
+  }
+
+  TextEditingController customer_name = TextEditingController();
+  TextEditingController customer_address = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
-    final box = Hive.box("invoice");
-
-    // Add Item
-    Future<void> AddItem(Map<String, dynamic> newItem) async {
-      await box.add(newItem);
-      print(newItem);
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  InvoiceDetails(item_key: widget.key_value)));
-      // refreshData(); // update the UI
-    }
-
-    final customer_name = TextEditingController();
-    final customer_address = TextEditingController();
-
     return Scaffold(
       appBar: AppBar(
         title: Text("Create Invoice"),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: app_color,
-        onPressed: () async {
+        onPressed: () {
           // FocusScope.of(context).unfocus();
           showForm();
         },
@@ -86,7 +83,7 @@ class CreateInvoiceState extends State<CreateInvoice> {
                 ),
               ),
               FittedBox(
-                child: ItemLIist.isEmpty
+                child: ItemList.isEmpty
                     ? Center(
                         child: Text("No Item Add in List"),
                       )
@@ -119,25 +116,62 @@ class CreateInvoiceState extends State<CreateInvoice> {
                                       fontWeight: FontWeight.bold))),
                         ],
                         rows: List.generate(
-                          ItemLIist.length,
-                          (index) => DataRow(cells: [
-                            DataCell(
-                              Text("${index + 1}"),
-                            ),
-                            DataCell(
-                              Text(ItemLIist[index]['item_name']),
-                            ),
-                            DataCell(
-                              Text(ItemLIist[index]['item_quantity']),
-                            ),
-                            DataCell(
-                              Text(
-                                  "${double.parse(ItemLIist[index]['item_price'])}"),
-                            ),
-                            DataCell(
-                              Text(ItemLIist[index]['item_total']),
-                            ),
-                          ]),
+                          ItemList.length,
+                          (index) => DataRow(
+                              onLongPress: () {
+                                showDialog(
+                                    barrierDismissible: false,
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title:
+                                            Text("Are You Sure, Delete This"),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () {
+                                                setState(() {
+                                                  Total_Amount = Total_Amount -
+                                                      double.parse(
+                                                          ItemList[index]
+                                                                  ['item_total']
+                                                              .toString());
+                                                  ItemList.removeAt(index);
+                                                });
+                                                Navigator.pop(context);
+                                              },
+                                              child: Text(
+                                                "Delete",
+                                                style: TextStyle(
+                                                    color: Colors.red),
+                                              )),
+                                          TextButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              child: Text("Cancel"))
+                                        ],
+                                      );
+                                    });
+                              },
+                              cells: [
+                                DataCell(
+                                  Text("${index + 1}"),
+                                ),
+                                DataCell(
+                                  Text(ItemList[index]['item_name']),
+                                ),
+                                DataCell(
+                                  Text(ItemList[index]['item_quantity']),
+                                ),
+                                DataCell(
+                                  Text(
+                                      "${NumberFormat.currency(symbol: '', decimalDigits: 1, locale: 'Hi').format(num.parse(ItemList[index]['item_price'].toString()))}"),
+                                ),
+                                DataCell(
+                                  Text(
+                                      "${NumberFormat.currency(symbol: '', decimalDigits: 1, locale: 'Hi').format(num.parse(ItemList[index]['item_total'].toString()))}"),
+                                ),
+                              ]),
                         ).toList(),
                       ),
               ),
@@ -147,7 +181,8 @@ class CreateInvoiceState extends State<CreateInvoice> {
               Container(
                 padding: EdgeInsets.only(right: 20),
                 alignment: Alignment.centerRight,
-                child: Text("Total : ₹ $Total_Amount",
+                child: Text(
+                    "Total : ₹ ${NumberFormat.currency(symbol: '', decimalDigits: 1, locale: 'Hi').format(num.parse(Total_Amount.toString()))}",
                     style:
                         TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
@@ -161,7 +196,7 @@ class CreateInvoiceState extends State<CreateInvoice> {
                           'date': DateFormat('dd-MM-yy').format(DateTime.now()),
                           'time': DateFormat('HH:mm:ss').format(DateTime.now()),
                           'address': customer_address.text,
-                          'items': ItemLIist,
+                          'items': ItemList,
                           'total': Total_Amount,
                         },
                       );
@@ -185,15 +220,13 @@ class CreateInvoiceState extends State<CreateInvoice> {
     TextEditingController item_price = TextEditingController();
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          // title: Text('Add Product Details'),
           content: Container(
               alignment: Alignment.center,
               height: 280,
               child: Column(
-                // mainAxisAlignment: MainAxisAlignment.center,
-                // crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,11 +283,11 @@ class CreateInvoiceState extends State<CreateInvoice> {
                                   "${double.parse(item_quantity.text) * double.parse(item_price.text)}",
                             };
 
-                            ItemLIist.add(data);
+                            ItemList.add(data);
                             Total_Amount = Total_Amount +
                                 double.parse(
                                     "${double.parse(item_quantity.text) * double.parse(item_price.text)}");
-                            print(ItemLIist);
+                            print(ItemList);
                             Navigator.pop(context);
                           });
                         } else {
@@ -263,17 +296,7 @@ class CreateInvoiceState extends State<CreateInvoice> {
                       },
                       child: Text("ADD"))
                 ],
-              )
-
-              // actions: <Widget>[
-              //   new FlatButton(
-              //     child: new Text('SUBMIT'),
-              //     onPressed: () {
-              //       Navigator.of(context).pop();
-              //     },
-              //   )
-              // ],
-              ),
+              )),
         );
       },
     );

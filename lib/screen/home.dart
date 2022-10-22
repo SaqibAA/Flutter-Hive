@@ -65,15 +65,15 @@ class HomeState extends State<Home> {
   //   refreshData(); // update the UI
   // }
 
-  // Delete a single item
-  Future<void> deleteItem(int id) async {
-    await box.delete(id);
-    refreshData(); // update the UI
+  // // Delete a single item
+  // Future<void> deleteItem(int id) async {
+  //   await box.delete(id);
+  //   refreshData(); // update the UI
 
-    // Display a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An item has been deleted')));
-  }
+  //   // Display a snackbar
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('An item has been deleted')));
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -184,17 +184,13 @@ class HomeState extends State<Home> {
                               color: app_color,
                             ),
                             child: IconButton(
-                                onPressed: () async {
-                                  String add = await Navigator.push(
+                                onPressed: () {
+                                  Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                           builder: (context) => InvoiceDetails(
                                                 item_key: currentItem['key'],
                                               )));
-                                  if (add == "add") {
-                                    refreshData();
-                                    print("Working");
-                                  }
                                 },
                                 icon: Icon(
                                   Icons.arrow_forward_ios_rounded,

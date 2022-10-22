@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:intl/intl.dart';
 import 'package:invoice_generater/screen/global/global.dart';
 import 'package:invoice_generater/screen/home.dart';
 import 'package:invoice_generater/screen/invoice/file_handle_api.dart';
 import 'package:invoice_generater/screen/invoice/pdf_invoice_api.dart';
 
+// ignore: must_be_immutable
 class InvoiceDetails extends StatefulWidget {
   var item_key;
   InvoiceDetails({Key? key, required this.item_key}) : super(key: key);
@@ -66,8 +68,12 @@ class InvoiceDetailsState extends State<InvoiceDetails> {
         // Navigator.of(context,)
         //   ..pop()
         //   ..pop();
-
-        Navigator.pop(context, "add");
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+                builder: (context) => Home(), maintainState: true),
+            (Route<dynamic> route) => false);
+        // Navigator.pop(context, "add");
         return false;
       },
       child: Scaffold(
@@ -152,10 +158,12 @@ class InvoiceDetailsState extends State<InvoiceDetails> {
                       Text(itemData[index]['item_quantity']),
                     ),
                     DataCell(
-                      Text("${double.parse(itemData[index]['item_price'])}"),
+                      Text(
+                          "${NumberFormat.currency(symbol: '', decimalDigits: 1, locale: 'Hi').format(num.parse(itemData[index]['item_price'].toString()))}"),
                     ),
                     DataCell(
-                      Text(itemData[index]['item_total']),
+                      Text(
+                          "${NumberFormat.currency(symbol: '', decimalDigits: 1, locale: 'Hi').format(num.parse(itemData[index]['item_total'].toString()))}"),
                     ),
                   ]),
                 ).toList(),
@@ -167,7 +175,8 @@ class InvoiceDetailsState extends State<InvoiceDetails> {
             Container(
               padding: EdgeInsets.only(right: 20),
               alignment: Alignment.centerRight,
-              child: Text("Total : ₹ $Total_Amount",
+              child: Text(
+                  "Total : ${NumberFormat.currency(symbol: '₹', decimalDigits: 1, locale: 'Hi').format(num.parse(Total_Amount.toString()))}",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
           ],
